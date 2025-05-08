@@ -1,0 +1,2312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TARIA - Gestión de Proyectos con IA</title>
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
+    <!-- FullCalendar -->
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Font Awesome (para iconos) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary-color: #6d28d9; /* Violeta */
+            --primary-hover: #5b21b6;
+            --secondary-color: #10b981; /* Verde esmeralda */
+            --accent-color: #f59e0b; /* Ámbar */
+            --background-color-light: #f9fafb;
+            --text-color-light: #1f2937;
+            --border-color-light: #e5e7eb;
+            --card-bg-light: #ffffff;
+            --sidebar-bg-light: #f3f4f6;
+
+            --background-color-dark: #1f2937;
+            --text-color-dark: #f3f4f6;
+            --border-color-dark: #374151;
+            --card-bg-dark: #374151;
+            --sidebar-bg-dark: #111827;
+
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --padding: 15px;
+            --gap: 15px;
+        }
+
+        /* Tema Claro por defecto */
+        body {
+            font-family: var(--font-family);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            background-color: var(--background-color-light);
+            color: var(--text-color-light);
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* Tema Oscuro */
+        body.dark-theme {
+            background-color: var(--background-color-dark);
+            color: var(--text-color-dark);
+        }
+        body.dark-theme .sidebar {
+            background-color: var(--sidebar-bg-dark);
+            border-right-color: var(--border-color-dark);
+        }
+        body.dark-theme .main-content {
+            background-color: var(--background-color-dark);
+        }
+        body.dark-theme .card, body.dark-theme .modal-content, body.dark-theme .kanban-column, body.dark-theme .note-card {
+            background-color: var(--card-bg-dark);
+            border-color: var(--border-color-dark);
+            box-shadow: 0 4px 6px -1px rgba(255, 255, 255, 0.05), 0 2px 4px -1px rgba(255, 255, 255, 0.03);
+        }
+        body.dark-theme input, body.dark-theme select, body.dark-theme textarea {
+            background-color: #4b5563; /* Gris oscuro para inputs */
+            color: var(--text-color-dark);
+            border-color: var(--border-color-dark);
+        }
+        body.dark-theme input::placeholder, body.dark-theme textarea::placeholder {
+            color: #9ca3af;
+        }
+        body.dark-theme .ql-toolbar, body.dark-theme .ql-container {
+            border-color: var(--border-color-dark) !important;
+        }
+        body.dark-theme .ql-editor {
+            color: var(--text-color-dark) !important;
+        }
+        body.dark-theme .fc .fc-button-primary {
+            background-color: var(--primary-color) !important;
+            border-color: var(--primary-color) !important;
+        }
+        body.dark-theme .fc .fc-daygrid-day-number, body.dark-theme .fc .fc-col-header-cell-cushion {
+            color: var(--text-color-dark) !important;
+        }
+        body.dark-theme .fc-day-today {
+            background-color: rgba(255, 255, 255, 0.1) !important;
+        }
+        body.dark-theme .toast {
+            background-color: #374151;
+            color: #f3f4f6;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--sidebar-bg-light);
+            padding: var(--padding);
+            border-right: 1px solid var(--border-color-light);
+            display: flex;
+            flex-direction: column;
+            transition: background-color 0.3s, border-color 0.3s;
+        }
+        .sidebar-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .sidebar-nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .sidebar-nav li a {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            text-decoration: none;
+            color: inherit; /* Hereda color del body (claro/oscuro) */
+            border-radius: var(--border-radius);
+            margin-bottom: 8px;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        .sidebar-nav li a i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar-nav li a:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .sidebar-nav li a.active {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+        .sidebar-footer {
+            margin-top: auto;
+            text-align: center;
+            font-size: 0.8em;
+            color: #6b7280; /* Gris, se mantiene en ambos temas */
+        }
+        body.dark-theme .sidebar-footer {
+            color: #9ca3af;
+        }
+
+
+        /* Main Content */
+        .main-content {
+            flex-grow: 1;
+            padding: var(--padding);
+            overflow-y: auto;
+            background-color: var(--background-color-light);
+            transition: background-color 0.3s;
+        }
+        .section {
+            display: none;
+        }
+        .section.active {
+            display: block;
+        }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--gap);
+            padding-bottom: var(--gap);
+            border-bottom: 1px solid var(--border-color-light);
+        }
+        body.dark-theme .section-header {
+            border-bottom-color: var(--border-color-dark);
+        }
+        .section-header h2 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg-light);
+            border: 1px solid var(--border-color-light);
+            border-radius: var(--border-radius);
+            padding: var(--padding);
+            margin-bottom: var(--gap);
+            box-shadow: var(--box-shadow);
+            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+        }
+        .card h3 {
+            margin-top: 0;
+            color: var(--primary-color);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: var(--gap);
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input[type="text"],
+        .form-group input[type="date"],
+        .form-group input[type="email"],
+        .form-group input[type="password"],
+        .form-group textarea,
+        .form-group select {
+            width: calc(100% - 22px); /* Considera padding y borde */
+            padding: 10px;
+            border: 1px solid var(--border-color-light);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+        .btn:active {
+            transform: translateY(1px);
+        }
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--primary-hover);
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        .btn-secondary:hover {
+            background-color: #059669;
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+        }
+        .btn-outline:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Modals */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease-out;
+        }
+        .modal-content {
+            background-color: var(--card-bg-light);
+            margin: 10% auto;
+            padding: var(--padding);
+            border: 1px solid var(--border-color-light);
+            border-radius: var(--border-radius);
+            width: 80%;
+            max-width: 600px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+            animation: slideInUp 0.3s ease-out;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: var(--gap);
+            border-bottom: 1px solid var(--border-color-light);
+            margin-bottom: var(--gap);
+        }
+        body.dark-theme .modal-header {
+            border-bottom-color: var(--border-color-dark);
+        }
+        .modal-header h3 {
+            margin: 0;
+        }
+        .close-btn {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-btn:hover, .close-btn:focus {
+            color: var(--text-color-light); /* O text-color-dark en tema oscuro */
+            text-decoration: none;
+        }
+        body.dark-theme .close-btn:hover, body.dark-theme .close-btn:focus {
+            color: var(--text-color-dark);
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideInUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* Dashboard Specifics */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--gap);
+            margin-bottom: var(--gap);
+        }
+        .stat-item {
+            padding: var(--padding);
+            text-align: center;
+        }
+        .stat-item .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+        .stat-item .label {
+            font-size: 0.9em;
+            color: #6b7280;
+        }
+        body.dark-theme .stat-item .label {
+            color: #9ca3af;
+        }
+        .activity-log ul {
+            list-style: none;
+            padding: 0;
+        }
+        .activity-log li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color-light);
+        }
+        body.dark-theme .activity-log li {
+            border-bottom-color: var(--border-color-dark);
+        }
+        .activity-log li:last-child {
+            border-bottom: none;
+        }
+
+        /* Projects Specifics */
+        .projects-view-controls {
+            margin-bottom: var(--gap);
+        }
+        .projects-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--gap);
+        }
+        .project-card {
+            /* hereda de .card */
+            position: relative;
+        }
+        .project-card .status-indicator {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: white;
+        }
+        .status-active { background-color: var(--secondary-color); }
+        .status-completed { background-color: #6b7280; }
+        .status-overdue { background-color: #ef4444; }
+        .project-card .tags span {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        body.dark-theme .project-card .tags span {
+            background-color: #4b5563;
+            color: #e5e7eb;
+        }
+
+        /* Tasks Specifics */
+        .task-view-controls {
+            margin-bottom: var(--gap);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        .task-view-controls .filters {
+            display: flex;
+            gap: 10px;
+        }
+        .task-view-controls input, .task-view-controls select {
+            padding: 8px;
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color-light);
+        }
+        .task-list .task-item, .kanban-task {
+            padding: var(--padding);
+            margin-bottom: var(--gap);
+            border: 1px solid var(--border-color-light);
+            border-radius: var(--border-radius);
+            background-color: var(--card-bg-light);
+            box-shadow: var(--box-shadow);
+            cursor: pointer; /* For drag and drop */
+        }
+        body.dark-theme .task-list .task-item, body.dark-theme .kanban-task {
+            border-color: var(--border-color-dark);
+            background-color: var(--card-bg-dark);
+        }
+        .task-item h4, .kanban-task h4 { margin-top: 0; }
+        .task-item .details, .kanban-task .details { font-size: 0.9em; color: #6b7280; }
+        body.dark-theme .task-item .details, body.dark-theme .kanban-task .details { color: #9ca3af; }
+        .priority-low { border-left: 5px solid #34d399; } /* Green */
+        .priority-medium { border-left: 5px solid #facc15; } /* Yellow */
+        .priority-high { border-left: 5px solid #f97316; } /* Orange */
+        .priority-urgent { border-left: 5px solid #ef4444; } /* Red */
+
+        /* Kanban View */
+        .kanban-board {
+            display: flex;
+            gap: var(--gap);
+            overflow-x: auto;
+            padding-bottom: var(--padding); /* For scrollbar visibility */
+        }
+        .kanban-column {
+            min-width: 300px;
+            max-width: 350px; /* Ensure columns don't get too wide */
+            flex: 1;
+            background-color: var(--sidebar-bg-light); /* Similar to sidebar */
+            border-radius: var(--border-radius);
+            padding: var(--padding);
+            border: 1px solid var(--border-color-light);
+        }
+        .kanban-column h3 {
+            margin-top: 0;
+            padding-bottom: var(--gap);
+            border-bottom: 1px solid var(--border-color-light);
+            font-size: 1.2em;
+        }
+        body.dark-theme .kanban-column h3 {
+            border-bottom-color: var(--border-color-dark);
+        }
+        .kanban-tasks-container {
+            min-height: 200px; /* To allow dropping in empty columns */
+            /* max-height: 60vh;
+            overflow-y: auto; */
+        }
+        .kanban-task {
+            /* styles inherited from .task-item */
+        }
+        .dragging {
+            opacity: 0.5;
+            transform: rotate(3deg);
+        }
+        .drag-over {
+            border: 2px dashed var(--primary-color);
+            background-color: rgba(109, 40, 217, 0.1);
+        }
+
+        /* Calendar & Timeline (FullCalendar overrides) */
+        #task-calendar-view, #task-timeline-view {
+            max-height: 70vh; /* Adjust as needed */
+        }
+        .fc .fc-event {
+            cursor: pointer;
+        }
+
+        /* Notes & Documentation Specifics */
+        .notes-layout {
+            display: flex;
+            gap: var(--gap);
+        }
+        .notes-sidebar {
+            width: 200px;
+            flex-shrink: 0;
+        }
+        .notes-sidebar h4 { margin-top: 0; }
+        .notes-sidebar ul { list-style: none; padding: 0; }
+        .notes-sidebar li {
+            padding: 8px;
+            cursor: pointer;
+            border-radius: var(--border-radius);
+        }
+        .notes-sidebar li:hover, .notes-sidebar li.active-folder {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .notes-content {
+            flex-grow: 1;
+        }
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: var(--gap);
+        }
+        .note-card {
+            /* inherits from .card */
+            cursor: pointer;
+        }
+        .note-card .preview {
+            height: 100px;
+            overflow: hidden;
+            font-size: 0.9em;
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        body.dark-theme .note-card .preview { color: #9ca3af; }
+        .note-card .tags span {
+            background-color: #e5e7eb;
+            color: #374151;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-size: 0.8em;
+            margin-right: 5px;
+        }
+        body.dark-theme .note-card .tags span {
+            background-color: #4b5563;
+            color: #e5e7eb;
+        }
+        #note-editor-container .ql-editor {
+            min-height: 250px;
+        }
+
+        /* Reports Specifics */
+        .reports-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: var(--gap);
+        }
+        .report-chart-container {
+            min-height: 300px;
+        }
+
+        /* Settings Specifics */
+        .settings-section {
+            margin-bottom: 30px;
+        }
+        .settings-section h3 {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+        body.dark-theme .settings-section h3 {
+            border-bottom-color: var(--border-color-dark);
+        }
+        /* Toggle Switch for Dark Mode */
+        .switch {
+          position: relative;
+          display: inline-block;
+          width: 60px;
+          height: 34px;
+        }
+        .switch input {
+          opacity: 0;
+          width: 0;
+          height: 0;
+        }
+        .slider {
+          position: absolute;
+          cursor: pointer;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background-color: #ccc;
+          transition: .4s;
+          border-radius: 34px;
+        }
+        .slider:before {
+          position: absolute;
+          content: "";
+          height: 26px;
+          width: 26px;
+          left: 4px;
+          bottom: 4px;
+          background-color: white;
+          transition: .4s;
+          border-radius: 50%;
+        }
+        input:checked + .slider {
+          background-color: var(--primary-color);
+        }
+        input:checked + .slider:before {
+          transform: translateX(26px);
+        }
+
+        /* Tooltips (Simple CSS Tooltips) */
+        [data-tooltip] {
+            position: relative;
+            cursor: pointer;
+        }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%; /* Position above the element */
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: var(--border-radius);
+            font-size: 0.85em;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s, visibility 0.2s;
+            z-index: 1001; /* Above modals slightly */
+        }
+        [data-tooltip]:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 2000; /* Above everything */
+        }
+        .toast {
+            background-color: var(--card-bg-light);
+            color: var(--text-color-light);
+            padding: 15px 20px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            margin-bottom: 10px;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: opacity 0.5s, transform 0.5s;
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .toast.success { border-left: 5px solid var(--secondary-color); }
+        .toast.error { border-left: 5px solid #ef4444; }
+        .toast.info { border-left: 5px solid var(--accent-color); }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                align-items: center;
+                padding: 10px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color-light);
+            }
+            body.dark-theme .sidebar {
+                border-bottom-color: var(--border-color-dark);
+            }
+            .sidebar-header {
+                margin-bottom: 0;
+                margin-right: auto; /* Push nav to the right */
+                font-size: 1.2em;
+            }
+            .sidebar-nav ul {
+                display: flex;
+            }
+            .sidebar-nav li a {
+                padding: 8px 10px;
+                margin-bottom: 0;
+                margin-left: 5px; /* Spacing between nav items */
+            }
+            .sidebar-nav li a span { display: none; } /* Hide text, show icons */
+            .sidebar-nav li a i { margin-right: 0; }
+            .sidebar-footer { display: none; }
+
+            .main-content {
+                height: calc(100vh - 60px); /* Adjust based on sidebar height */
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            .kanban-board {
+                flex-direction: column; /* Stack columns on mobile */
+            }
+            .kanban-column {
+                min-width: unset;
+                width: 100%;
+            }
+            .notes-layout {
+                flex-direction: column;
+            }
+            .notes-sidebar {
+                width: 100%;
+                margin-bottom: var(--gap);
+            }
+            .reports-grid {
+                 grid-template-columns: 1fr;
+            }
+            .modal-content {
+                width: 90%;
+                margin: 5% auto;
+            }
+            .task-view-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .task-view-controls .filters {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">TARIA <i class="fas fa-brain" style="font-size: 0.8em;"></i></div>
+        <nav class="sidebar-nav">
+            <ul>
+                <li><a href="#dashboard" class="nav-link active" data-tooltip="Inicio"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+                <li><a href="#projects" class="nav-link" data-tooltip="Proyectos"><i class="fas fa-folder-open"></i> <span>Proyectos</span></a></li>
+                <li><a href="#tasks" class="nav-link" data-tooltip="Tareas"><i class="fas fa-tasks"></i> <span>Tareas</span></a></li>
+                <li><a href="#notes" class="nav-link" data-tooltip="Notas"><i class="fas fa-sticky-note"></i> <span>Notas</span></a></li>
+                <li><a href="#reports" class="nav-link" data-tooltip="Reportes"><i class="fas fa-chart-line"></i> <span>Reportes</span></a></li>
+                <li><a href="#settings" class="nav-link" data-tooltip="Ajustes"><i class="fas fa-cog"></i> <span>Ajustes</span></a></li>
+            </ul>
+        </nav>
+        <div class="sidebar-footer">
+            &copy; 2024 TARIA
+        </div>
+    </div>
+
+    <div class="main-content">
+        <!-- Dashboard Section -->
+        <div id="dashboard" class="section active">
+            <div class="section-header">
+                <h2>Dashboard</h2>
+            </div>
+            <div class="stats-grid">
+                <div class="card stat-item">
+                    <div id="stat-active-projects" class="value">0</div>
+                    <div class="label">Proyectos Activos</div>
+                </div>
+                <div class="card stat-item">
+                    <div id="stat-tasks-completed" class="value">0</div>
+                    <div class="label">Tareas Completadas (Hoy)</div>
+                </div>
+                <div class="card stat-item">
+                    <div id="stat-tasks-due-soon" class="value">0</div>
+                    <div class="label">Tareas Próximas a Vencer</div>
+                </div>
+                <div class="card stat-item">
+                    <div id="stat-total-documents" class="value">0</div>
+                    <div class="label">Total de Documentos</div>
+                </div>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-history"></i> Actividad Reciente</h3>
+                <div class="activity-log">
+                    <ul id="recent-activity-list">
+                        <!-- Activity items will be populated by JS -->
+                    </ul>
+                </div>
+            </div>
+            <div class="card">
+                <h3><i class="fas fa-lightbulb"></i> Insights Personalizados</h3>
+                <p id="dashboard-insights">Analizando tu actividad para ofrecerte insights...</p>
+                 <p><em>(Ej: "Parece que completas más tareas los Lunes." o "Tienes X tareas de alta prioridad pendientes.")</em></p>
+            </div>
+             <div class="card">
+                <h3><i class="fas fa-chart-pie"></i> Progreso General (Últimos 7 días)</h3>
+                <canvas id="progress-chart" style="max-height: 250px;"></canvas>
+            </div>
+        </div>
+
+        <!-- Projects Section -->
+        <div id="projects" class="section">
+            <div class="section-header">
+                <h2>Proyectos</h2>
+                <button id="add-project-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Nuevo Proyecto</button>
+            </div>
+            <div class="projects-view-controls">
+                <input type="text" id="project-search" placeholder="Buscar proyectos...">
+                <select id="project-filter-status">
+                    <option value="all">Todos los Estados</option>
+                    <option value="active">Activo</option>
+                    <option value="completed">Completado</option>
+                    <option value="overdue">Vencido</option>
+                </select>
+                <button id="project-view-grid" class="btn btn-outline" data-tooltip="Vista Grid"><i class="fas fa-th-large"></i></button>
+                <button id="project-view-list" class="btn btn-outline" data-tooltip="Vista Lista"><i class="fas fa-list"></i></button>
+            </div>
+            <div id="projects-container" class="projects-grid">
+                <!-- Project cards will be populated by JS -->
+            </div>
+        </div>
+
+        <!-- Tasks Section -->
+        <div id="tasks" class="section">
+            <div class="section-header">
+                <h2>Tareas</h2>
+                <button id="add-task-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Tarea</button>
+            </div>
+            <div class="task-view-controls">
+                <button id="task-view-list-btn" class="btn btn-outline active-view" data-view="list" data-tooltip="Vista Lista"><i class="fas fa-list"></i></button>
+                <button id="task-view-kanban-btn" class="btn btn-outline" data-view="kanban" data-tooltip="Vista Kanban"><i class="fas fa-columns"></i></button>
+                <button id="task-view-calendar-btn" class="btn btn-outline" data-view="calendar" data-tooltip="Vista Calendario"><i class="fas fa-calendar-alt"></i></button>
+                <button id="task-view-timeline-btn" class="btn btn-outline" data-view="timeline" data-tooltip="Vista Timeline"><i class="fas fa-stream"></i></button>
+                
+                <div class="filters" style="margin-left:auto;">
+                    <input type="text" id="task-search" placeholder="Buscar tareas...">
+                    <select id="task-filter-project">
+                        <option value="all">Todos los Proyectos</option>
+                        <!-- Project options populated by JS -->
+                    </select>
+                    <select id="task-filter-status">
+                        <option value="all">Todos los Estados</option>
+                        <option value="open">Abierto</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="in_progress">En Progreso</option>
+                        <option value="reviewing">Revisando</option>
+                        <option value="done">Hecho</option>
+                    </select>
+                    <select id="task-filter-priority">
+                        <option value="all">Todas las Prioridades</option>
+                        <option value="low">Baja</option>
+                        <option value="medium">Media</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                     <input type="date" id="task-filter-date" title="Filtrar por fecha de vencimiento">
+                </div>
+            </div>
+
+            <div id="task-list-view" class="task-view active-task-view">
+                <!-- Task items will be populated by JS -->
+            </div>
+            <div id="task-kanban-view" class="task-view kanban-board" style="display:none;">
+                <!-- Kanban columns populated by JS -->
+            </div>
+            <div id="task-calendar-view" class="task-view" style="display:none;">
+                <!-- FullCalendar instance here -->
+            </div>
+            <div id="task-timeline-view" class="task-view" style="display:none;">
+                <!-- FullCalendar timeline instance here -->
+            </div>
+        </div>
+
+        <!-- Notes & Documentation Section -->
+        <div id="notes" class="section">
+            <div class="section-header">
+                <h2>Notas & Documentación</h2>
+                <button id="add-note-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Nueva Nota</button>
+            </div>
+            <input type="text" id="note-search" placeholder="Buscar notas..." style="width:100%; margin-bottom: var(--gap); padding: 10px; border-radius: var(--border-radius); border: 1px solid var(--border-color-light);">
+            <div class="notes-layout">
+                <div class="notes-sidebar card">
+                    <h4>Carpetas</h4>
+                    <ul id="notes-folder-list">
+                        <li data-folder="all" class="active-folder">Todas las Notas</li>
+                        <li data-folder="general">General</li>
+                        <li data-folder="work">Work</li>
+                        <li data-folder="personal">Personal</li>
+                        <li data-folder="ideas">Ideas</li>
+                    </ul>
+                </div>
+                <div class="notes-content">
+                    <div id="notes-grid-view" class="notes-grid">
+                        <!-- Note cards will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports & Productivity Section -->
+        <div id="reports" class="section">
+            <div class="section-header">
+                <h2>Reportes & Productividad</h2>
+                <div>
+                    <button id="export-csv-btn" class="btn btn-secondary" data-tooltip="Exportar Tareas a CSV"><i class="fas fa-file-csv"></i> CSV</button>
+                    <button id="export-json-btn" class="btn btn-secondary" data-tooltip="Exportar Todo a JSON"><i class="fas fa-file-code"></i> JSON</button>
+                </div>
+            </div>
+            <div class="reports-grid">
+                <div class="card">
+                    <h3><i class="fas fa-check-circle"></i> Finalización de Tareas</h3>
+                    <div class="report-chart-container">
+                        <canvas id="task-completion-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-clock"></i> Distribución de Tiempo (Estimado)</h3>
+                     <div class="report-chart-container">
+                        <canvas id="time-distribution-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-chart-line"></i> Tendencias de Productividad</h3>
+                     <div class="report-chart-container">
+                        <canvas id="productivity-trends-chart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3><i class="fas fa-calendar-check"></i> Resumen de Agenda</h3>
+                    <p>Próximas tareas y plazos importantes...</p>
+                    <ul id="schedule-overview-list"></ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings & Personalization Section -->
+        <div id="settings" class="section">
+            <div class="section-header">
+                <h2>Ajustes & Personalización</h2>
+            </div>
+            <div class="card settings-section">
+                <h3><i class="fas fa-user-circle"></i> Perfil de Usuario</h3>
+                <form id="user-profile-form">
+                    <div class="form-group">
+                        <label for="profile-name">Nombre:</label>
+                        <input type="text" id="profile-name" name="profile-name" value="Usuario Demo">
+                    </div>
+                    <div class="form-group">
+                        <label for="profile-email">Email:</label>
+                        <input type="email" id="profile-email" name="profile-email" value="demo@taria.app">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Guardar Perfil</button>
+                </form>
+            </div>
+            <div class="card settings-section">
+                <h3><i class="fas fa-palette"></i> Apariencia y Tema</h3>
+                 <div class="form-group" style="display:flex; align-items:center;">
+                    <label for="theme-toggle" style="margin-right:10px;">Tema Oscuro:</label>
+                    <label class="switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            <div class="card settings-section">
+                <h3><i class="fas fa-bell"></i> Notificaciones</h3>
+                <p>Configuraciones de notificación (simulado).</p>
+                 <label class="switch" style="margin-right: 10px;">
+                    <input type="checkbox" checked> <span class="slider"></span>
+                </label> Notificaciones de escritorio <br><br>
+                <label class="switch" style="margin-right: 10px;">
+                    <input type="checkbox" checked> <span class="slider"></span>
+                </label> Resumenes por email
+            </div>
+             <div class="card settings-section">
+                <h3><i class="fas fa-shield-alt"></i> Seguridad</h3>
+                <button class="btn btn-outline">Cambiar Contraseña</button>
+                 <button class="btn btn-outline" style="margin-left:10px;">Habilitar 2FA</button>
+            </div>
+            <div class="card settings-section">
+                <h3><i class="fas fa-plug"></i> Integraciones</h3>
+                <p>Conecta TARIA con otras apps (simulado).</p>
+                <button class="btn btn-outline">Google Calendar</button>
+                <button class="btn btn-outline" style="margin-left:10px;">Slack</button>
+            </div>
+             <div class="card settings-section">
+                <h3><i class="fas fa-database"></i> Gestión de Datos</h3>
+                <button id="clear-data-btn" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Borrar Todos los Datos Locales</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="project-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="project-modal-title">Nuevo Proyecto</h3>
+                <span class="close-btn" data-modal="project-modal">&times;</span>
+            </div>
+            <form id="project-form">
+                <input type="hidden" id="project-id">
+                <div class="form-group">
+                    <label for="project-name">Nombre del Proyecto:</label>
+                    <input type="text" id="project-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="project-description">Descripción:</label>
+                    <textarea id="project-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="project-tags">Etiquetas (separadas por coma):</label>
+                    <input type="text" id="project-tags">
+                </div>
+                <div class="form-group">
+                    <label for="project-due-date">Fecha Límite:</label>
+                    <input type="date" id="project-due-date">
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Proyecto</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="task-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="task-modal-title">Nueva Tarea</h3>
+                <span class="close-btn" data-modal="task-modal">&times;</span>
+            </div>
+            <form id="task-form">
+                <input type="hidden" id="task-id">
+                <div class="form-group">
+                    <label for="task-name">Nombre de la Tarea:</label>
+                    <input type="text" id="task-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-project">Proyecto:</label>
+                    <select id="task-project-select">
+                        <!-- Options populated by JS -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Descripción:</label>
+                    <textarea id="task-description"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="task-due-date">Fecha de Vencimiento:</label>
+                    <input type="date" id="task-due-date">
+                </div>
+                <div class="form-group">
+                    <label for="task-priority">Prioridad:</label>
+                    <select id="task-priority-select">
+                        <option value="low">Baja</option>
+                        <option value="medium">Media</option>
+                        <option value="high">Alta</option>
+                        <option value="urgent">Urgente</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="task-status">Estado:</label>
+                    <select id="task-status-select">
+                        <option value="open">Abierto</option>
+                        <option value="pending">Pendiente</option>
+                        <option value="in_progress">En Progreso</option>
+                        <option value="reviewing">Revisando</option>
+                        <option value="done">Hecho</option>
+                    </select>
+                </div>
+                <!-- Subtareas y comentarios se podrían añadir como una lista aquí o en una vista detallada -->
+                <div class="form-group">
+                    <label for="task-subtasks">Subtareas (una por línea):</label>
+                    <textarea id="task-subtasks" placeholder="Subtarea 1\nSubtarea 2"></textarea>
+                </div>
+                 <div class="form-group">
+                    <label for="task-comments">Comentarios:</label>
+                    <textarea id="task-comments"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Tarea</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="note-modal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 id="note-modal-title">Nueva Nota</h3>
+                <span class="close-btn" data-modal="note-modal">&times;</span>
+            </div>
+            <form id="note-form">
+                <input type="hidden" id="note-id">
+                <div class="form-group">
+                    <label for="note-title">Título de la Nota:</label>
+                    <input type="text" id="note-title" required>
+                </div>
+                <div class="form-group">
+                    <label for="note-folder">Carpeta:</label>
+                    <select id="note-folder-select">
+                        <option value="general">General</option>
+                        <option value="work">Work</option>
+                        <option value="personal">Personal</option>
+                        <option value="ideas">Ideas</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="note-tags">Etiquetas (separadas por coma):</label>
+                    <input type="text" id="note-tags">
+                </div>
+                <div class="form-group">
+                    <label>Contenido:</label>
+                    <div id="note-editor-container">
+                        <!-- Quill editor will be initialized here -->
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Guardar Nota</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="task-detail-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="task-detail-title">Detalle de Tarea</h3>
+                <span class="close-btn" data-modal="task-detail-modal">&times;</span>
+            </div>
+            <div id="task-detail-content">
+                <!-- Contenido del detalle de la tarea -->
+            </div>
+            <div style="text-align: right; margin-top: 20px;">
+                <button class="btn btn-outline" id="edit-task-from-detail-btn">Editar</button>
+                <button class="btn btn-danger" id="delete-task-from-detail-btn">Eliminar</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast-container">
+        <!-- Toasts will be appended here -->
+    </div>
+
+<script>
+$(document).ready(function() {
+    // --- CONFIG & GLOBAL VARS ---
+    const APP_NAME = 'TARIA_APP_DATA';
+    let appData = {
+        projects: [],
+        tasks: [],
+        notes: [],
+        settings: {
+            theme: 'light',
+            userName: 'Usuario Demo',
+            userEmail: 'demo@taria.app',
+            lastActivityLog: []
+        },
+        nextProjectId: 1,
+        nextTaskId: 1,
+        nextNoteId: 1
+    };
+
+    const TASK_STATUSES = {
+        open: "Abierto",
+        pending: "Pendiente",
+        in_progress: "En Progreso",
+        reviewing: "Revisando",
+        done: "Hecho"
+    };
+
+    const TASK_PRIORITIES = {
+        low: "Baja",
+        medium: "Media",
+        high: "Alta",
+        urgent: "Urgente"
+    };
+
+    let quillEditor;
+    let calendarInstance, timelineInstance;
+    let charts = {}; // To store chart instances
+
+    // --- DATA PERSISTENCE ---
+    function saveData() {
+        localStorage.setItem(APP_NAME, JSON.stringify(appData));
+        console.log("Data saved:", appData);
+    }
+
+    function loadData() {
+        const storedData = localStorage.getItem(APP_NAME);
+        if (storedData) {
+            appData = JSON.parse(storedData);
+            // Ensure arrays exist if old data structure
+            if (!appData.settings.lastActivityLog) appData.settings.lastActivityLog = [];
+            if (!appData.projects) appData.projects = [];
+            if (!appData.tasks) appData.tasks = [];
+            if (!appData.notes) appData.notes = [];
+
+            // Make sure IDs are numbers
+            appData.nextProjectId = parseInt(appData.nextProjectId) || 1;
+            appData.nextTaskId = parseInt(appData.nextTaskId) || 1;
+            appData.nextNoteId = parseInt(appData.nextNoteId) || 1;
+
+        } else {
+            // Initialize with some demo data if first time
+            appData.projects.push({ id: appData.nextProjectId++, name: "Lanzamiento Web TARIA", description: "Desarrollar y lanzar la nueva web de TARIA.", tags: ["web", "marketing"], dueDate: "2024-12-31", createdAt: new Date().toISOString() });
+            appData.tasks.push({ id: appData.nextTaskId++, projectId: 1, name: "Diseñar UI/UX", description: "Crear mockups y prototipos.", dueDate: "2024-09-15", priority: "high", status: "in_progress", subtasks:[], comments:"", createdAt: new Date().toISOString() });
+            appData.notes.push({ id: appData.nextNoteId++, title: "Ideas Brainstorming", folder: "ideas", tags: ["proyecto x", "marketing"], content: "<p>Primera idea...</p><p>Segunda idea...</p>", createdAt: new Date().toISOString() });
+            addActivityLog("TARIA inicializado con datos de demostración.");
+        }
+        console.log("Data loaded:", appData);
+    }
+
+    // --- UTILITY FUNCTIONS ---
+    function generateId(type) {
+        if (type === 'project') return appData.nextProjectId++;
+        if (type === 'task') return appData.nextTaskId++;
+        if (type === 'note') return appData.nextNoteId++;
+        return Date.now(); // Fallback
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        const date = new Date(dateString);
+        return date.toLocaleDateString('es-ES', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+    
+    function getTodayDateString() {
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const dd = String(today.getDate()).padStart(2, '0');
+        return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function addActivityLog(message) {
+        const timestamp = new Date().toISOString();
+        appData.settings.lastActivityLog.unshift({ timestamp, message });
+        if (appData.settings.lastActivityLog.length > 20) { // Keep only last 20 activities
+            appData.settings.lastActivityLog.pop();
+        }
+        saveData();
+        renderDashboard(); // Re-render dashboard to show new activity
+    }
+
+    function showToast(message, type = 'info') { // types: success, error, info
+        const toastContainer = $('.toast-container');
+        const toastId = 'toast-' + Date.now();
+        const toast = $(`<div class="toast ${type}" id="${toastId}">${message}</div>`);
+        toastContainer.append(toast);
+        
+        setTimeout(() => toast.addClass('show'), 10); // Trigger transition
+
+        setTimeout(() => {
+            toast.removeClass('show');
+            setTimeout(() => toast.remove(), 500); // Remove from DOM after transition
+        }, 3000);
+    }
+
+    // --- NAVIGATION ---
+    function showSection(sectionId) {
+        $('.section').removeClass('active').hide();
+        $('#' + sectionId).addClass('active').fadeIn(300);
+        $('.nav-link').removeClass('active');
+        $(`.nav-link[href="#${sectionId}"]`).addClass('active');
+        
+        // Specific rendering functions for sections that need dynamic content
+        if (sectionId === 'dashboard') renderDashboard();
+        if (sectionId === 'projects') renderProjects();
+        if (sectionId === 'tasks') {
+            renderTasks(); // This will render the current active task view
+            populateProjectFilterForTasks();
+        }
+        if (sectionId === 'notes') renderNotes();
+        if (sectionId === 'reports') renderReports();
+        if (sectionId === 'settings') renderSettings();
+
+        // Handle specific initializations for calendar/timeline if they are shown
+        if (sectionId === 'tasks') {
+            const activeTaskView = $('.task-view-controls .active-view').data('view');
+            if (activeTaskView === 'calendar') initializeTaskCalendar();
+            if (activeTaskView === 'timeline') initializeTaskTimeline();
+        }
+    }
+
+    $('.nav-link').on('click', function(e) {
+        e.preventDefault();
+        const sectionId = $(this).attr('href').substring(1);
+        window.location.hash = sectionId; // Update hash for bookmarking/history
+    });
+
+    // Handle hash changes (e.g. back/forward button or direct URL)
+    $(window).on('hashchange', function() {
+        const hash = window.location.hash.substring(1) || 'dashboard';
+        showSection(hash);
+    }).trigger('hashchange'); // Trigger on load
+
+
+    // --- MODALS ---
+    function openModal(modalId) {
+        $('#' + modalId).fadeIn(200).css('display', 'flex');
+    }
+
+    function closeModal(modalId) {
+        $('#' + modalId).fadeOut(200);
+    }
+
+    $('.close-btn').on('click', function() {
+        closeModal($(this).data('modal'));
+    });
+
+    $(window).on('click', function(event) {
+        if ($(event.target).hasClass('modal')) {
+            closeModal($(event.target).attr('id'));
+        }
+    });
+
+
+    // --- DASHBOARD ---
+    function renderDashboard() {
+        const today = getTodayDateString();
+        const tasksCompletedToday = appData.tasks.filter(t => t.status === 'done' && t.dueDate === today).length; // Simplified for demo
+        const tasksDueSoon = appData.tasks.filter(t => {
+            if (t.status === 'done' || !t.dueDate) return false;
+            const dueDate = new Date(t.dueDate);
+            const now = new Date();
+            const diffTime = dueDate - now;
+            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+            return diffDays >= 0 && diffDays <= 7; // Due in the next 7 days
+        }).length;
+
+        $('#stat-active-projects').text(appData.projects.filter(p => !isProjectCompleted(p.id) && (!p.dueDate || new Date(p.dueDate) >= new Date())).length);
+        $('#stat-tasks-completed').text(tasksCompletedToday);
+        $('#stat-tasks-due-soon').text(tasksDueSoon);
+        $('#stat-total-documents').text(appData.notes.length);
+
+        // Activity Log
+        const $activityList = $('#recent-activity-list');
+        $activityList.empty();
+        if (appData.settings.lastActivityLog && appData.settings.lastActivityLog.length > 0) {
+            appData.settings.lastActivityLog.slice(0, 5).forEach(activity => {
+                $activityList.append(`<li>${new Date(activity.timestamp).toLocaleString('es-ES')}: ${activity.message}</li>`);
+            });
+        } else {
+            $activityList.append('<li>No hay actividad reciente.</li>');
+        }
+        
+        // Insights (Simple)
+        let insights = "Comienza a trabajar en tus proyectos y tareas para ver insights aquí.";
+        if (appData.tasks.length > 5 && tasksDueSoon > 2) {
+            insights = `Tienes ${tasksDueSoon} tareas importantes próximas a vencer. ¡Priorízalas!`;
+        } else if (tasksCompletedToday > 3) {
+            insights = `¡Gran trabajo hoy! Ya has completado ${tasksCompletedToday} tareas.`;
+        }
+        $('#dashboard-insights').text(insights);
+        renderDashboardProgressChart();
+    }
+    
+    function renderDashboardProgressChart() {
+        if (charts.progressChart) charts.progressChart.destroy();
+        const ctx = document.getElementById('progress-chart').getContext('2d');
+        
+        const labels = [];
+        const tasksDoneData = [];
+        for (let i = 6; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            labels.push(d.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric' }));
+            
+            const dateStr = d.toISOString().split('T')[0];
+            tasksDoneData.push(appData.tasks.filter(t => t.status === 'done' && t.createdAt && t.createdAt.startsWith(dateStr)).length);
+        }
+
+        charts.progressChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tareas Completadas',
+                    data: tasksDoneData,
+                    borderColor: 'rgb(109, 40, 217)', // --primary-color
+                    tension: 0.1,
+                    fill: true,
+                    backgroundColor: 'rgba(109, 40, 217, 0.1)'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- PROJECTS ---
+    let currentProjectView = 'grid'; // 'grid' or 'list'
+
+    function isProjectCompleted(projectId) {
+        const projectTasks = appData.tasks.filter(t => t.projectId === projectId);
+        if (projectTasks.length === 0) return false; // No tasks, not completed by tasks
+        return projectTasks.every(t => t.status === 'done');
+    }
+
+    function getProjectStatus(project) {
+        if (isProjectCompleted(project.id)) return 'completed';
+        if (project.dueDate && new Date(project.dueDate) < new Date()) return 'overdue';
+        return 'active';
+    }
+    
+    function renderProjects() {
+        const container = $('#projects-container');
+        container.empty();
+        container.removeClass('projects-grid projects-list').addClass(`projects-${currentProjectView}`);
+
+        const searchTerm = $('#project-search').val().toLowerCase();
+        const filterStatus = $('#project-filter-status').val();
+
+        const filteredProjects = appData.projects.filter(project => {
+            const matchesSearch = project.name.toLowerCase().includes(searchTerm) ||
+                                  project.description.toLowerCase().includes(searchTerm) ||
+                                  (project.tags && project.tags.join(',').toLowerCase().includes(searchTerm));
+            
+            const projectActualStatus = getProjectStatus(project);
+            const matchesStatus = (filterStatus === 'all') || (projectActualStatus === filterStatus);
+
+            return matchesSearch && matchesStatus;
+        });
+
+
+        if (filteredProjects.length === 0) {
+            container.html('<p>No se encontraron proyectos.</p>');
+            return;
+        }
+
+        filteredProjects.forEach(project => {
+            const status = getProjectStatus(project);
+            const statusClass = `status-${status}`;
+            const statusText = status.charAt(0).toUpperCase() + status.slice(1);
+
+            const tagsHtml = project.tags ? project.tags.map(tag => `<span>${tag}</span>`).join('') : '';
+            
+            const projectCardHtml = `
+                <div class="card project-card" data-id="${project.id}">
+                    <span class="status-indicator ${statusClass}">${statusText}</span>
+                    <h3>${project.name}</h3>
+                    <p>${project.description || 'Sin descripción.'}</p>
+                    ${project.dueDate ? `<p><strong>Fecha Límite:</strong> ${formatDate(project.dueDate)}</p>` : ''}
+                    <div class="tags" style="margin-top:10px;">${tagsHtml}</div>
+                    <div style="margin-top:15px; text-align:right;">
+                        <button class="btn btn-outline btn-sm edit-project-btn" data-id="${project.id}"><i class="fas fa-edit"></i> Editar</button>
+                        <button class="btn btn-danger btn-sm delete-project-btn" data-id="${project.id}"><i class="fas fa-trash"></i> Eliminar</button>
+                    </div>
+                </div>
+            `;
+            container.append(projectCardHtml);
+        });
+    }
+
+    $('#add-project-btn').on('click', function() {
+        $('#project-modal-title').text('Nuevo Proyecto');
+        $('#project-form')[0].reset();
+        $('#project-id').val('');
+        openModal('project-modal');
+    });
+
+    $('#project-form').on('submit', function(e) {
+        e.preventDefault();
+        const projectId = $('#project-id').val();
+        const projectData = {
+            name: $('#project-name').val(),
+            description: $('#project-description').val(),
+            tags: $('#project-tags').val().split(',').map(t => t.trim()).filter(t => t),
+            dueDate: $('#project-due-date').val(),
+        };
+
+        if (projectId) { // Editing
+            const index = appData.projects.findIndex(p => p.id == projectId);
+            if (index !== -1) {
+                appData.projects[index] = { ...appData.projects[index], ...projectData };
+                addActivityLog(`Proyecto "${projectData.name}" actualizado.`);
+                showToast(`Proyecto "${projectData.name}" actualizado.`, 'success');
+            }
+        } else { // Creating
+            projectData.id = generateId('project');
+            projectData.createdAt = new Date().toISOString();
+            appData.projects.push(projectData);
+            addActivityLog(`Proyecto "${projectData.name}" creado.`);
+            showToast(`Proyecto "${projectData.name}" creado.`, 'success');
+        }
+        saveData();
+        renderProjects();
+        populateProjectFilterForTasks(); // Update task project dropdowns
+        closeModal('project-modal');
+    });
+
+    $('#projects-container').on('click', '.edit-project-btn', function() {
+        const projectId = $(this).data('id');
+        const project = appData.projects.find(p => p.id == projectId);
+        if (project) {
+            $('#project-modal-title').text('Editar Proyecto');
+            $('#project-id').val(project.id);
+            $('#project-name').val(project.name);
+            $('#project-description').val(project.description);
+            $('#project-tags').val(project.tags ? project.tags.join(', ') : '');
+            $('#project-due-date').val(project.dueDate);
+            openModal('project-modal');
+        }
+    });
+
+    $('#projects-container').on('click', '.delete-project-btn', function() {
+        const projectId = $(this).data('id');
+        if (confirm('¿Estás seguro de que quieres eliminar este proyecto y todas sus tareas asociadas?')) {
+            const projectName = appData.projects.find(p => p.id == projectId)?.name || "Desconocido";
+            appData.projects = appData.projects.filter(p => p.id != projectId);
+            // Also delete associated tasks
+            appData.tasks = appData.tasks.filter(t => t.projectId != projectId);
+            addActivityLog(`Proyecto "${projectName}" y sus tareas eliminados.`);
+            showToast(`Proyecto "${projectName}" eliminado.`, 'success');
+            saveData();
+            renderProjects();
+            renderTasks(); // Refresh tasks as some might be deleted
+            populateProjectFilterForTasks();
+        }
+    });
+    
+    $('#project-search, #project-filter-status').on('input change', renderProjects);
+    $('#project-view-grid').on('click', function() { currentProjectView = 'grid'; $(this).addClass('btn-primary').removeClass('btn-outline'); $('#project-view-list').addClass('btn-outline').removeClass('btn-primary'); renderProjects(); });
+    $('#project-view-list').on('click', function() { currentProjectView = 'list'; $(this).addClass('btn-primary').removeClass('btn-outline'); $('#project-view-grid').addClass('btn-outline').removeClass('btn-primary'); renderProjects(); });
+
+
+    // --- TASKS ---
+    let currentTaskView = 'list'; // list, kanban, calendar, timeline
+    let draggedTask = null;
+
+    function populateProjectFilterForTasks() {
+        const $projectFilter = $('#task-filter-project');
+        const $taskProjectSelect = $('#task-project-select');
+        const currentFilterVal = $projectFilter.val();
+        const currentTaskProjectVal = $taskProjectSelect.val();
+
+        $projectFilter.html('<option value="all">Todos los Proyectos</option>');
+        $taskProjectSelect.empty(); // Clear before populating
+
+        if (appData.projects.length === 0) {
+             $taskProjectSelect.append('<option value="">No hay proyectos disponibles</option>');
+        } else {
+            appData.projects.forEach(project => {
+                $projectFilter.append(`<option value="${project.id}">${project.name}</option>`);
+                $taskProjectSelect.append(`<option value="${project.id}">${project.name}</option>`);
+            });
+        }
+        $projectFilter.val(currentFilterVal || "all"); // Restore selection if possible
+        $taskProjectSelect.val(currentTaskProjectVal || (appData.projects[0]?.id || ""));
+    }
+
+    function getFilteredTasks() {
+        const searchTerm = $('#task-search').val().toLowerCase();
+        const filterProject = $('#task-filter-project').val();
+        const filterStatus = $('#task-filter-status').val();
+        const filterPriority = $('#task-filter-priority').val();
+        const filterDate = $('#task-filter-date').val();
+
+        return appData.tasks.filter(task => {
+            const project = appData.projects.find(p => p.id === task.projectId);
+            const projectName = project ? project.name.toLowerCase() : "";
+
+            const matchesSearch = task.name.toLowerCase().includes(searchTerm) ||
+                                  (task.description && task.description.toLowerCase().includes(searchTerm)) ||
+                                  projectName.includes(searchTerm);
+            const matchesProject = (filterProject === 'all') || (task.projectId == filterProject);
+            const matchesStatus = (filterStatus === 'all') || (task.status === filterStatus);
+            const matchesPriority = (filterPriority === 'all') || (task.priority === filterPriority);
+            const matchesDate = (!filterDate) || (task.dueDate === filterDate);
+
+            return matchesSearch && matchesProject && matchesStatus && matchesPriority && matchesDate;
+        });
+    }
+
+    function renderTasks() {
+        // Hide all views first
+        $('.task-view').hide().removeClass('active-task-view');
+        
+        // Show the current active view
+        if (currentTaskView === 'list') {
+            $('#task-list-view').show().addClass('active-task-view');
+            renderTaskList();
+        } else if (currentTaskView === 'kanban') {
+            $('#task-kanban-view').show().addClass('active-task-view');
+            renderKanbanBoard();
+        } else if (currentTaskView === 'calendar') {
+            $('#task-calendar-view').show().addClass('active-task-view');
+            initializeTaskCalendar();
+        } else if (currentTaskView === 'timeline') {
+            $('#task-timeline-view').show().addClass('active-task-view');
+            initializeTaskTimeline();
+        }
+        // Update active button style
+        $('.task-view-controls button[data-view]').removeClass('active-view btn-primary').addClass('btn-outline');
+        $(`.task-view-controls button[data-view="${currentTaskView}"]`).addClass('active-view btn-primary').removeClass('btn-outline');
+    }
+
+    function renderTaskList() {
+        const container = $('#task-list-view');
+        container.empty();
+        const tasksToRender = getFilteredTasks();
+
+        if (tasksToRender.length === 0) {
+            container.html('<p>No se encontraron tareas.</p>');
+            return;
+        }
+
+        tasksToRender.forEach(task => {
+            const project = appData.projects.find(p => p.id === task.projectId);
+            const taskHtml = `
+                <div class="task-item priority-${task.priority}" data-id="${task.id}" draggable="true">
+                    <h4>${task.name} <span style="font-size:0.8em; color:#6b7280">(${TASK_PRIORITIES[task.priority]})</span></h4>
+                    <p class="details">
+                        ${project ? `<strong>Proyecto:</strong> ${project.name} | ` : ''}
+                        <strong>Vence:</strong> ${formatDate(task.dueDate)} | 
+                        <strong>Estado:</strong> ${TASK_STATUSES[task.status]}
+                    </p>
+                    ${task.description ? `<p style="font-size:0.9em; margin-top:5px;">${task.description.substring(0,100)}${task.description.length > 100 ? '...' : ''}</p>` : ''}
+                </div>`;
+            container.append(taskHtml);
+        });
+    }
+    
+    function renderKanbanBoard() {
+        const board = $('#task-kanban-view');
+        board.empty();
+        const tasksToRender = getFilteredTasks(); // Kanban will also respect global filters
+
+        Object.keys(TASK_STATUSES).forEach(statusKey => {
+            const columnHtml = `
+                <div class="kanban-column" data-status="${statusKey}">
+                    <h3>${TASK_STATUSES[statusKey]}</h3>
+                    <div class="kanban-tasks-container">
+                        ${tasksToRender.filter(task => task.status === statusKey).map(task => {
+                            const project = appData.projects.find(p => p.id === task.projectId);
+                            return `
+                                <div class="kanban-task priority-${task.priority}" data-id="${task.id}" draggable="true">
+                                    <h4>${task.name}</h4>
+                                    <p class="details">
+                                        ${project ? `P: ${project.name.substring(0,15)}... | ` : ''}
+                                        V: ${formatDate(task.dueDate)}
+                                    </p>
+                                </div>`;
+                        }).join('')}
+                    </div>
+                </div>`;
+            board.append(columnHtml);
+        });
+    }
+
+    // Task drag and drop for Kanban
+    $('#tasks').on('dragstart', '.kanban-task, .task-item', function(e) {
+        if (currentTaskView !== 'kanban' && !$(this).hasClass('kanban-task')) return; // Only allow drag for actual kanban tasks for now
+        draggedTask = $(this).data('id');
+        $(this).addClass('dragging');
+        // e.originalEvent.dataTransfer.setData('text/plain', $(this).data('id')); // Not strictly needed if using global var
+    });
+
+    $('#tasks').on('dragend', '.kanban-task, .task-item', function() {
+        $(this).removeClass('dragging');
+        draggedTask = null;
+    });
+
+    $('#tasks').on('dragover', '.kanban-column', function(e) {
+        e.preventDefault(); // Allow drop
+        $(this).addClass('drag-over');
+    });
+
+    $('#tasks').on('dragleave', '.kanban-column', function() {
+        $(this).removeClass('drag-over');
+    });
+
+    $('#tasks').on('drop', '.kanban-column', function(e) {
+        e.preventDefault();
+        $(this).removeClass('drag-over');
+        const targetStatus = $(this).data('status');
+        
+        if (draggedTask && targetStatus) {
+            const task = appData.tasks.find(t => t.id == draggedTask);
+            if (task && task.status !== targetStatus) {
+                task.status = targetStatus;
+                addActivityLog(`Tarea "${task.name}" movida a "${TASK_STATUSES[targetStatus]}".`);
+                showToast(`Tarea "${task.name}" movida.`, 'success');
+                saveData();
+                renderKanbanBoard(); // Re-render Kanban
+                // If list view was active before, re-render list
+                if ($('#task-list-view').hasClass('active-task-view')) renderTaskList();
+            }
+        }
+    });
+
+    function initializeTaskCalendar() {
+        const calendarEl = document.getElementById('task-calendar-view');
+        if (!calendarEl) return;
+
+        if (calendarInstance) {
+            calendarInstance.destroy();
+        }
+        
+        const events = getFilteredTasks().map(task => ({
+            id: task.id,
+            title: task.name,
+            start: task.dueDate,
+            allDay: true, // Assuming tasks are for whole days
+            backgroundColor: getPriorityColor(task.priority),
+            borderColor: getPriorityColor(task.priority)
+        }));
+
+        calendarInstance = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,listWeek'
+            },
+            events: events,
+            editable: true, // Allows dragging events
+            eventDrop: function(info) {
+                const taskId = info.event.id;
+                const newDueDate = info.event.start.toISOString().split('T')[0];
+                const task = appData.tasks.find(t => t.id == taskId);
+                if (task) {
+                    task.dueDate = newDueDate;
+                    addActivityLog(`Fecha de tarea "${task.name}" actualizada a ${formatDate(newDueDate)}.`);
+                    showToast(`Fecha de tarea "${task.name}" actualizada.`, 'success');
+                    saveData();
+                    // No need to re-render calendar, FullCalendar handles it. But other views might need update.
+                }
+            },
+            eventClick: function(info) {
+                const taskId = info.event.id;
+                showTaskDetailModal(taskId);
+            },
+            locale: 'es'
+        });
+        calendarInstance.render();
+    }
+    
+    function initializeTaskTimeline() {
+        const timelineEl = document.getElementById('task-timeline-view');
+        if (!timelineEl) return;
+
+        if (timelineInstance) {
+            timelineInstance.destroy();
+        }
+
+        const resources = appData.projects.map(p => ({ id: p.id.toString(), title: p.name }));
+        const events = getFilteredTasks().map(task => ({
+            id: task.id.toString(),
+            resourceId: task.projectId ? task.projectId.toString() : undefined, // Ensure it's a string
+            title: task.name,
+            start: task.dueDate, // Or a start date if you have one
+            end: task.dueDate, // Or an end date. For simplicity, using dueDate for both for now
+            backgroundColor: getPriorityColor(task.priority)
+        }));
+        
+        timelineInstance = new FullCalendar.Calendar(timelineEl, {
+            initialView: 'resourceTimelineMonth', // Example timeline view
+            schedulerLicenseKey: 'GPL-My-Project-Is-Open-Source', // Required for resource views
+            resources: resources.length > 0 ? resources : [{id: 'unassigned', title: 'Sin Proyecto'}], // Add a default resource if none exist
+            events: events,
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'resourceTimelineDay,resourceTimelineWeek,resourceTimelineMonth'
+            },
+            editable: true,
+            eventDrop: function(info) {
+                const taskId = info.event.id;
+                const newDate = info.event.start.toISOString().split('T')[0];
+                const newProjectId = info.newResource ? info.newResource.id : null;
+
+                const task = appData.tasks.find(t => t.id == taskId);
+                if (task) {
+                    task.dueDate = newDate; // Assuming drop changes due date
+                    if (newProjectId && newProjectId !== 'unassigned') task.projectId = parseInt(newProjectId);
+                    
+                    addActivityLog(`Tarea "${task.name}" actualizada en timeline.`);
+                    showToast(`Tarea "${task.name}" actualizada.`, 'success');
+                    saveData();
+                }
+            },
+            eventClick: function(info) {
+                const taskId = info.event.id;
+                showTaskDetailModal(taskId);
+            },
+            locale: 'es'
+        });
+        timelineInstance.render();
+    }
+
+    function getPriorityColor(priority) {
+        switch (priority) {
+            case 'low': return '#34d399'; // Green
+            case 'medium': return '#facc15'; // Yellow
+            case 'high': return '#f97316'; // Orange
+            case 'urgent': return '#ef4444'; // Red
+            default: return '#6b7280'; // Gray
+        }
+    }
+
+    $('.task-view-controls button[data-view]').on('click', function() {
+        currentTaskView = $(this).data('view');
+        renderTasks();
+    });
+
+    $('#add-task-btn').on('click', function() {
+        $('#task-modal-title').text('Nueva Tarea');
+        $('#task-form')[0].reset();
+        $('#task-id').val('');
+        populateProjectFilterForTasks(); // Ensure project dropdown is up-to-date
+        $('#task-project-select').val(appData.projects[0]?.id || ""); // Default to first project or none
+        $('#task-status-select').val('open');
+        $('#task-priority-select').val('medium');
+        openModal('task-modal');
+    });
+
+    $('#task-form').on('submit', function(e) {
+        e.preventDefault();
+        const taskId = $('#task-id').val();
+        const taskData = {
+            name: $('#task-name').val(),
+            projectId: parseInt($('#task-project-select').val()),
+            description: $('#task-description').val(),
+            dueDate: $('#task-due-date').val(),
+            priority: $('#task-priority-select').val(),
+            status: $('#task-status-select').val(),
+            subtasks: $('#task-subtasks').val().split('\n').map(s => s.trim()).filter(s => s),
+            comments: $('#task-comments').val()
+        };
+
+        if (taskId) { // Editing
+            const index = appData.tasks.findIndex(t => t.id == taskId);
+            if (index !== -1) {
+                appData.tasks[index] = { ...appData.tasks[index], ...taskData };
+                addActivityLog(`Tarea "${taskData.name}" actualizada.`);
+                showToast(`Tarea "${taskData.name}" actualizada.`, 'success');
+            }
+        } else { // Creating
+            taskData.id = generateId('task');
+            taskData.createdAt = new Date().toISOString();
+            appData.tasks.push(taskData);
+            addActivityLog(`Tarea "${taskData.name}" creada.`);
+            showToast(`Tarea "${taskData.name}" creada.`, 'success');
+        }
+        saveData();
+        renderTasks();
+        closeModal('task-modal');
+        if ($('#task-detail-modal').is(':visible')) { // If detail modal was open, refresh it
+            showTaskDetailModal(taskId || taskData.id);
+        }
+    });
+
+    // Event delegation for clicking on a task item (list or kanban) to show details
+    $('#tasks').on('click', '.task-item, .kanban-task', function(e) {
+        // Prevent detail modal if clicking on a button inside the task item (if any added later)
+        if ($(e.target).closest('button').length) return;
+        
+        const taskId = $(this).data('id');
+        showTaskDetailModal(taskId);
+    });
+
+    function showTaskDetailModal(taskId) {
+        const task = appData.tasks.find(t => t.id == taskId);
+        if (!task) return;
+
+        const project = appData.projects.find(p => p.id === task.projectId);
+        let subtasksHtml = '<h5>Subtareas:</h5>';
+        if (task.subtasks && task.subtasks.length > 0) {
+            subtasksHtml += '<ul>' + task.subtasks.map(st => `<li>${st}</li>`).join('') + '</ul>';
+        } else {
+            subtasksHtml += '<p>No hay subtareas.</p>';
+        }
+
+        let commentsHtml = '<h5>Comentarios:</h5>';
+        if (task.comments) {
+            commentsHtml += `<p style="white-space: pre-wrap;">${task.comments}</p>`;
+        } else {
+            commentsHtml += '<p>No hay comentarios.</p>';
+        }
+
+        $('#task-detail-title').text(task.name);
+        $('#task-detail-content').html(`
+            <p><strong>Proyecto:</strong> ${project ? project.name : 'N/A'}</p>
+            <p><strong>Descripción:</strong> ${task.description || 'N/A'}</p>
+            <p><strong>Fecha de Vencimiento:</strong> ${formatDate(task.dueDate)}</p>
+            <p><strong>Prioridad:</strong> ${TASK_PRIORITIES[task.priority]}</p>
+            <p><strong>Estado:</strong> ${TASK_STATUSES[task.status]}</p>
+            <hr>
+            ${subtasksHtml}
+            <hr>
+            ${commentsHtml}
+        `);
+        $('#edit-task-from-detail-btn').data('id', taskId);
+        $('#delete-task-from-detail-btn').data('id', taskId);
+        openModal('task-detail-modal');
+    }
+
+    $('#edit-task-from-detail-btn').on('click', function() {
+        const taskId = $(this).data('id');
+        const task = appData.tasks.find(t => t.id == taskId);
+        if (task) {
+            $('#task-modal-title').text('Editar Tarea');
+            $('#task-id').val(task.id);
+            $('#task-name').val(task.name);
+            $('#task-project-select').val(task.projectId);
+            $('#task-description').val(task.description);
+            $('#task-due-date').val(task.dueDate);
+            $('#task-priority-select').val(task.priority);
+            $('#task-status-select').val(task.status);
+            $('#task-subtasks').val(task.subtasks ? task.subtasks.join('\n') : '');
+            $('#task-comments').val(task.comments || '');
+            
+            closeModal('task-detail-modal'); // Close detail
+            openModal('task-modal');         // Open edit
+        }
+    });
+
+    $('#delete-task-from-detail-btn').on('click', function() {
+        const taskId = $(this).data('id');
+        if (confirm('¿Estás seguro de que quieres eliminar esta tarea?')) {
+            const taskName = appData.tasks.find(t => t.id == taskId)?.name || "Desconocida";
+            appData.tasks = appData.tasks.filter(t => t.id != taskId);
+            addActivityLog(`Tarea "${taskName}" eliminada.`);
+            showToast(`Tarea "${taskName}" eliminada.`, 'success');
+            saveData();
+            renderTasks();
+            closeModal('task-detail-modal');
+        }
+    });
+    
+    $('#task-search, #task-filter-project, #task-filter-status, #task-filter-priority, #task-filter-date').on('input change', renderTasks);
+
+
+    // --- NOTES & DOCUMENTATION ---
+    let currentNoteFolder = 'all';
+    function initializeQuillEditor() {
+        if (quillEditor) return; // Already initialized
+        quillEditor = new Quill('#note-editor-container', {
+            theme: 'snow',
+            modules: {
+                toolbar: [
+                    [{ 'header': [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                    [{ 'script': 'sub'}, { 'script': 'super' }],
+                    [{ 'indent': '-1'}, { 'indent': '+1' }],
+                    [{ 'color': [] }, { 'background': [] }],
+                    ['link', 'image', 'blockquote', 'code-block'],
+                    ['clean']
+                ]
+            }
+        });
+    }
+
+    function renderNotes() {
+        const gridView = $('#notes-grid-view');
+        gridView.empty();
+        
+        const searchTerm = $('#note-search').val().toLowerCase();
+
+        const filteredNotes = appData.notes.filter(note => {
+            const matchesFolder = (currentNoteFolder === 'all') || (note.folder === currentNoteFolder);
+            const matchesSearch = note.title.toLowerCase().includes(searchTerm) ||
+                                  (note.tags && note.tags.join(' ').toLowerCase().includes(searchTerm)) ||
+                                  (note.content && note.content.toLowerCase().includes(searchTerm)); // Basic content search
+            return matchesFolder && matchesSearch;
+        });
+
+        if (filteredNotes.length === 0) {
+            gridView.html('<p>No se encontraron notas.</p>');
+            return;
+        }
+
+        filteredNotes.forEach(note => {
+            const tagsHtml = note.tags ? note.tags.map(tag => `<span>${tag}</span>`).join('') : '';
+            // Create a temporary div to strip HTML for preview
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = note.content;
+            const textPreview = tempDiv.textContent || tempDiv.innerText || "";
+
+            const noteCardHtml = `
+                <div class="card note-card" data-id="${note.id}">
+                    <h3>${note.title}</h3>
+                    <div class="preview">${textPreview.substring(0, 100)}${textPreview.length > 100 ? '...' : ''}</div>
+                    <p style="font-size:0.8em; color: #6b7280;">Carpeta: ${note.folder} | Creada: ${formatDate(note.createdAt)}</p>
+                    <div class="tags" style="margin-top:5px;">${tagsHtml}</div>
+                </div>`;
+            gridView.append(noteCardHtml);
+        });
+    }
+
+    $('#notes-folder-list li').on('click', function() {
+        $('#notes-folder-list li').removeClass('active-folder');
+        $(this).addClass('active-folder');
+        currentNoteFolder = $(this).data('folder');
+        renderNotes();
+    });
+
+    $('#add-note-btn').on('click', function() {
+        initializeQuillEditor();
+        $('#note-modal-title').text('Nueva Nota');
+        $('#note-form')[0].reset();
+        $('#note-id').val('');
+        quillEditor.root.innerHTML = ''; // Clear editor
+        $('#note-folder-select').val(currentNoteFolder !== 'all' ? currentNoteFolder : 'general');
+        openModal('note-modal');
+    });
+
+    $('#note-form').on('submit', function(e) {
+        e.preventDefault();
+        const noteId = $('#note-id').val();
+        const noteData = {
+            title: $('#note-title').val(),
+            folder: $('#note-folder-select').val(),
+            tags: $('#note-tags').val().split(',').map(t => t.trim()).filter(t => t),
+            content: quillEditor.root.innerHTML
+        };
+
+        if (noteId) { // Editing
+            const index = appData.notes.findIndex(n => n.id == noteId);
+            if (index !== -1) {
+                appData.notes[index] = { ...appData.notes[index], ...noteData };
+                addActivityLog(`Nota "${noteData.title}" actualizada.`);
+                showToast(`Nota "${noteData.title}" actualizada.`, 'success');
+            }
+        } else { // Creating
+            noteData.id = generateId('note');
+            noteData.createdAt = new Date().toISOString();
+            appData.notes.push(noteData);
+            addActivityLog(`Nota "${noteData.title}" creada.`);
+            showToast(`Nota "${noteData.title}" creada.`, 'success');
+        }
+        saveData();
+        renderNotes();
+        renderDashboard(); // Update total documents stat
+        closeModal('note-modal');
+    });
+
+    $('#notes-grid-view').on('click', '.note-card', function() {
+        const noteId = $(this).data('id');
+        const note = appData.notes.find(n => n.id == noteId);
+        if (note) {
+            initializeQuillEditor();
+            $('#note-modal-title').text('Editar Nota');
+            $('#note-id').val(note.id);
+            $('#note-title').val(note.title);
+            $('#note-folder-select').val(note.folder);
+            $('#note-tags').val(note.tags ? note.tags.join(', ') : '');
+            quillEditor.root.innerHTML = note.content;
+            openModal('note-modal');
+        }
+    });
+    
+    $('#note-search').on('input', renderNotes);
+
+
+    // --- REPORTS & PRODUCTIVITY ---
+    function renderReports() {
+        renderTaskCompletionChart();
+        renderTimeDistributionChart();
+        renderProductivityTrendsChart();
+        renderScheduleOverview();
+    }
+
+    function renderTaskCompletionChart() {
+        if (charts.taskCompletion) charts.taskCompletion.destroy();
+        const ctx = document.getElementById('task-completion-chart').getContext('2d');
+        const statusCounts = {};
+        Object.keys(TASK_STATUSES).forEach(key => statusCounts[key] = 0);
+        appData.tasks.forEach(task => {
+            if (statusCounts[task.status] !== undefined) {
+                statusCounts[task.status]++;
+            }
+        });
+
+        charts.taskCompletion = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: Object.values(TASK_STATUSES),
+                datasets: [{
+                    label: 'Tareas por Estado',
+                    data: Object.values(statusCounts),
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',  // Open
+                        'rgba(255, 206, 86, 0.7)', // Pending
+                        'rgba(54, 162, 235, 0.7)', // In Progress
+                        'rgba(153, 102, 255, 0.7)',// Reviewing
+                        'rgba(75, 192, 192, 0.7)'  // Done
+                    ]
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+
+    function renderTimeDistributionChart() {
+        if (charts.timeDistribution) charts.timeDistribution.destroy();
+        const ctx = document.getElementById('time-distribution-chart').getContext('2d');
+        const projectTime = {}; // { projectId: countOfTasks }
+        appData.tasks.forEach(task => {
+            const projectId = task.projectId || 'unassigned';
+            projectTime[projectId] = (projectTime[projectId] || 0) + 1; // Simple count for demo
+        });
+        
+        const projectLabels = Object.keys(projectTime).map(pId => {
+            if (pId === 'unassigned') return "Tareas sin proyecto";
+            const project = appData.projects.find(p => p.id == pId);
+            return project ? project.name : `Proyecto ID ${pId}`;
+        });
+
+        charts.timeDistribution = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: projectLabels,
+                datasets: [{
+                    label: 'Distribución de Tareas por Proyecto',
+                    data: Object.values(projectTime),
+                    backgroundColor: [ // Generate some colors
+                        'rgba(255, 159, 64, 0.7)', 'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)', 'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)', 'rgba(153, 102, 255, 0.7)'
+                    ]
+                }]
+            },
+            options: { responsive: true, maintainAspectRatio: false }
+        });
+    }
+    
+    function renderProductivityTrendsChart() {
+        if (charts.productivityTrends) charts.productivityTrends.destroy();
+        const ctx = document.getElementById('productivity-trends-chart').getContext('2d');
+        
+        const labels = [];
+        const createdData = [];
+        const completedData = [];
+        // Last 30 days for example
+        for (let i = 29; i >= 0; i--) {
+            const d = new Date();
+            d.setDate(d.getDate() - i);
+            const dateStr = d.toISOString().split('T')[0];
+            labels.push(d.toLocaleDateString('es-ES', { month:'short', day:'numeric' }));
+            
+            createdData.push(appData.tasks.filter(t => t.createdAt && t.createdAt.startsWith(dateStr)).length);
+            completedData.push(appData.tasks.filter(t => t.status === 'done' && t.dueDate === dateStr).length); // Simple completion on due date
+        }
+
+        charts.productivityTrends = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Tareas Creadas',
+                    data: createdData,
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                }, {
+                    label: 'Tareas Completadas',
+                    data: completedData,
+                    backgroundColor: 'rgba(75, 192, 192, 0.7)',
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, ticks: { stepSize: 1 } }
+                }
+            }
+        });
+    }
+
+    function renderScheduleOverview() {
+        const $list = $('#schedule-overview-list');
+        $list.empty();
+        const upcomingTasks = appData.tasks
+            .filter(t => t.status !== 'done' && t.dueDate && new Date(t.dueDate) >= new Date())
+            .sort((a,b) => new Date(a.dueDate) - new Date(b.dueDate))
+            .slice(0, 5); // Show top 5
+
+        if (upcomingTasks.length === 0) {
+            $list.append('<li>No hay tareas próximas.</li>');
+            return;
+        }
+        upcomingTasks.forEach(task => {
+            $list.append(`<li><strong>${task.name}</strong> - Vence: ${formatDate(task.dueDate)} (${TASK_PRIORITIES[task.priority]})</li>`);
+        });
+    }
+
+    $('#export-csv-btn').on('click', function() {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ID,Nombre,Proyecto,Descripcion,FechaVencimiento,Prioridad,Estado,Subtareas,Comentarios,CreadoEn\r\n";
+        
+        appData.tasks.forEach(task => {
+            const project = appData.projects.find(p => p.id === task.projectId);
+            const row = [
+                task.id,
+                `"${task.name.replace(/"/g, '""')}"`,
+                `"${project ? project.name.replace(/"/g, '""') : 'N/A'}"`,
+                `"${(task.description || '').replace(/"/g, '""')}"`,
+                task.dueDate || '',
+                TASK_PRIORITIES[task.priority] || '',
+                TASK_STATUSES[task.status] || '',
+                `"${(task.subtasks || []).join('; ').replace(/"/g, '""')}"`,
+                `"${(task.comments || '').replace(/"/g, '""')}"`,
+                task.createdAt || ''
+            ].join(",");
+            csvContent += row + "\r\n";
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "taria_tasks.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        showToast('Tareas exportadas a CSV.', 'success');
+    });
+
+    $('#export-json-btn').on('click', function() {
+        const jsonData = JSON.stringify(appData, null, 2);
+        const blob = new Blob([jsonData], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'taria_data.json');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        showToast('Todos los datos exportados a JSON.', 'success');
+    });
+
+
+    // --- SETTINGS ---
+    function renderSettings() {
+        $('#profile-name').val(appData.settings.userName);
+        $('#profile-email').val(appData.settings.userEmail);
+        $('#theme-toggle').prop('checked', appData.settings.theme === 'dark');
+        applyTheme(appData.settings.theme); // Ensure theme is applied visually
+    }
+
+    $('#user-profile-form').on('submit', function(e) {
+        e.preventDefault();
+        appData.settings.userName = $('#profile-name').val();
+        appData.settings.userEmail = $('#profile-email').val();
+        saveData();
+        showToast('Perfil actualizado.', 'success');
+        addActivityLog("Perfil de usuario actualizado.");
+    });
+
+    $('#theme-toggle').on('change', function() {
+        const newTheme = $(this).is(':checked') ? 'dark' : 'light';
+        appData.settings.theme = newTheme;
+        applyTheme(newTheme);
+        saveData();
+        showToast(`Tema cambiado a ${newTheme === 'dark' ? 'Oscuro' : 'Claro'}.`, 'info');
+        addActivityLog(`Tema cambiado a ${newTheme === 'dark' ? 'Oscuro' : 'Claro'}.`);
+    });
+
+    function applyTheme(theme) {
+        if (theme === 'dark') {
+            $('body').addClass('dark-theme');
+        } else {
+            $('body').removeClass('dark-theme');
+        }
+        // If charts exist, re-render them or update options for dark theme
+        // This is a bit complex, for now, a page refresh or re-navigating might be needed for charts
+        // Or, one could define chart colors based on CSS variables that change with the theme.
+    }
+
+    $('#clear-data-btn').on('click', function() {
+        if (confirm('¡ADVERTENCIA! Esto borrará TODOS los datos de TARIA de tu navegador. ¿Estás seguro?')) {
+            localStorage.removeItem(APP_NAME);
+            // Reset appData to default structure (or reload the page)
+            appData = {
+                projects: [], tasks: [], notes: [],
+                settings: { theme: 'light', userName: 'Usuario Demo', userEmail: 'demo@taria.app', lastActivityLog: [] },
+                nextProjectId: 1, nextTaskId: 1, nextNoteId: 1
+            };
+            showToast('Todos los datos han sido borrados.', 'success');
+            addActivityLog("Todos los datos locales han sido borrados."); // This won't be saved but good for console
+            saveData(); // Save the empty state
+            location.reload(); // Easiest way to reset everything
+        }
+    });
+
+    // --- INITIALIZATION ---
+    loadData();
+    applyTheme(appData.settings.theme);
+    populateProjectFilterForTasks();
+    showSection(window.location.hash.substring(1) || 'dashboard'); // Initial section display
+    renderDashboard(); // Initial render of dashboard
+
+    // Log app load
+    addActivityLog("Aplicación TARIA cargada.");
+
+});
+</script>
+
+</body>
+</html>
+<!-- End of HTML document. -->
